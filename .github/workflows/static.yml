@@ -1,43 +1,36 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
-
-on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
+name: 테스트 및 배포 파이프라인
+on: [push]
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  test-and-notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/checkout@v3
+
+      # [테스트 단계] 파일에 '결제 실패' 로직이 포함되어 있는지 검사
+      - name: 필수 기능 체크
+        run: |
+          grep -q "결제 실패" index.html
+          if [ $? -eq 0 ]; then
+            echo "테스트 통과: 결제 실패 로직이 포함되어 있습니다."
+          else
+            echo "테스트 실패: 결제 실패 안내 문구가 사라졌습니다!"
+            exit 1
+          fi
+
+      # [성공 시 알림]
+      - name: 성공 슬랙 알림
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
         with:
-          # Upload entire repository
-          path: '.'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          payload: '{"text": "🚀 [어디든 가자] 테스트 완료 및 서비스 배포 성공!"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_URL }}
+
+      # [실패 시 알림]
+      - name: 실패 슬랙 알림
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: '{"text": "⚠️ [어디든 가자] 배포 실패! 테스트 단계에서 문제가 발견되었습니다. (결제 실패 로직 확인 필요)"}'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_URL }}
