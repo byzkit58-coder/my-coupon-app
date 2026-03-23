@@ -1,11 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>배달 할인 쿠폰</title>
+    <meta charset="UTF-8">
+    <title>어디든 가자 - 프리미엄 여행 예약</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f7f6; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; }
+        .package-list { display: flex; justify-content: space-around; margin-bottom: 30px; }
+        .package-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; width: 30%; cursor: pointer; transition: 0.3s; }
+        .package-card:hover { border-color: #3498db; background: #ebf5fb; }
+        .selected { border-color: #3498db; background: #ebf5fb; box-shadow: 0 0 10px rgba(52,152,219,0.5); }
+        .booking-form { margin-top: 20px; display: none; }
+        select, input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #3498db; color: white; border: none; font-size: 16px; cursor: pointer; }
+        button:hover { background: #2980b9; }
+        #result { margin-top: 20px; font-weight: bold; text-align: center; }
+    </style>
 </head>
-<body style="text-align: center; margin-top: 100px;">
-    <h1>🛵 배달 앱 선착순 쿠폰</h1>
-    <h2 style="color: red;">🎉 10,000원 할인! 🎉</h2>
-    <p>지금 바로 다운로드하세요!</p>
+<body>
+    <div class="container">
+        <h1>✈️ 어디든 가자: 패키지 예약</h1>
+        <div class="package-list">
+            <div class="package-card" onclick="selectPkg(this, '유럽 7일', '파리 호텔', '2,500,000')">
+                <h3>🇪🇺 유럽</h3><p>7일 / 파리 호텔<br><b>250만원</b></p>
+            </div>
+            <div class="package-card" onclick="selectPkg(this, '미국 5일', '뉴욕 리조트', '3,000,000')">
+                <h3>🇺🇸 미국</h3><p>5일 / 뉴욕 리조트<br><b>300만원</b></p>
+            </div>
+            <div class="package-card" onclick="selectPkg(this, '동남아 4일', '방콕 빌라', '800,000')">
+                <h3>🇹🇭 동남아</h3><p>4일 / 방콕 빌라<br><b>80만원</b></p>
+            </div>
+        </div>
+
+        <div id="bookingForm" class="booking-form">
+            <h2 id="selectedTitle">선택된 상품</h2>
+            <p>예약 일시: <input type="datetime-local" id="bookTime"></p>
+            <p>결제 수단 선택:
+                <select id="payMethod">
+                    <option value="card">신용카드 (정상)</option>
+                    <option value="bank">무통장 입금 (정상)</option>
+                    <option value="point">포인트 결제 (실패 테스트용)</option>
+                </select>
+            </p>
+            <button onclick="tryPay()">결제하기</button>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let selectedData = null;
+        function selectPkg(el, name, lodging, price) {
+            document.querySelectorAll('.package-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedData = {name, price};
+            document.getElementById('selectedTitle').innerText = name + " (" + lodging + ")";
+            document.getElementById('bookingForm').style.display = 'block';
+        }
+
+        function tryPay() {
+            const method = document.getElementById('payMethod').value;
+            const resultDiv = document.getElementById('result');
+            if (method === 'point') {
+                resultDiv.style.color = 'red';
+                resultDiv.innerText = "❌ 결제 실패: 포인트 잔액이 부족합니다. (시스템 오류 코트: E-404)";
+            } else {
+                resultDiv.style.color = 'green';
+                resultDiv.innerText = "✅ 결제 완료! " + selectedData.name + " 상품 예약이 확정되었습니다.";
+            }
+        }
+    </script>
 </body>
 </html>
